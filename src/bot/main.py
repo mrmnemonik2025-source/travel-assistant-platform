@@ -5,6 +5,9 @@ from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
 from src.bot.config.settings import load_settings
+from src.bot.handlers.common import router as common_router
+from src.bot.services.bookings import booking_service
+from src.bot.services.excursions import excursion_service
 
 
 def setup_logging(log_level: str) -> None:
@@ -21,9 +24,17 @@ async def main() -> None:
 
 	logger = logging.getLogger(__name__)
 	logger.info("Starting bot")
+	if settings.manager_chat_id is None:
+		logger.warning("MANAGER_CHAT_ID is not configured; manager notifications are disabled")
+	if not settings.admin_user_ids:
+		logger.warning("ADMIN_USER_IDS is empty; the admin panel is unavailable")
+
+	await booking_service.initialize_storage()
+	await excursion_service.initialize()
 
 	bot = Bot(token=settings.bot_token)
 	dispatcher = Dispatcher()
+	dispatcher.include_router(common_router)
 
 	try:
 		await dispatcher.start_polling(bot)
@@ -31,5 +42,9 @@ async def main() -> None:
 		await bot.session.close()
 
 
-if __name__ == "__main__":
+def run() -> None:
 	asyncio.run(main())
+
+
+if __name__ == "__main__":
+	run()

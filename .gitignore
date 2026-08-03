@@ -12,6 +12,13 @@ dist/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+
+# Test and tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
 
 # VS Code
 .vscode/
@@ -19,3 +26,11 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local SQLite database
+data/database/*.db
+
+# Uploaded excursion media
+data/media/excursions/**
+!data/media/excursions/
+!data/media/excursions/.gitkeep
