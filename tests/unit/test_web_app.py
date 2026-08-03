@@ -14,7 +14,8 @@ class WebAppTests(unittest.IsolatedAsyncioTestCase):
 	async def test_catalog_exposes_active_excursions_and_images(self) -> None:
 		items = await list_excursions()
 		self.assertEqual(6, len(items))
-		self.assertTrue(items[0]["image_url"].startswith("/api/excursions/"))
+		self.assertTrue(items[0]["image_url"].startswith("/static/images/excursions/"))
+		self.assertTrue(items[0]["source_image_url"].startswith("/api/excursions/"))
 		self.assertIn("price", items[0])
 
 	async def test_excursion_detail_uses_shared_catalog(self) -> None:

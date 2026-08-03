@@ -28,7 +28,7 @@ nav a { transition: opacity .2s; }
 nav a:hover { opacity: .72; }
 .nav-cta { padding: 11px 17px; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; }
 
-.hero { position: relative; min-height: 780px; height: 100vh; color: white; background: url('/api/excursions/asia_mix_islands/image') center 45% / cover no-repeat; overflow: hidden; }
+.hero { position: relative; min-height: 780px; height: 100vh; color: white; background: url('/static/images/excursions/asia_mix_islands.webp') center 45% / cover no-repeat; overflow: hidden; }
 .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(2,25,31,.85) 0%, rgba(2,25,31,.53) 47%, rgba(2,25,31,.12) 76%), linear-gradient(0deg, rgba(2,25,31,.35), transparent 45%); }
 .hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; min-height: inherit; width: min(760px, 90%); padding: 120px clamp(24px, 8vw, 130px) 80px; }
 .eyebrow { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .22em; color: #8ee8dc; }
@@ -60,7 +60,7 @@ h1 em { color: #9be9df; font-weight: 600; }
 .card { position: relative; min-height: 500px; color: white; overflow: hidden; border-radius: 6px; background: #1c464c; box-shadow: 0 15px 42px rgba(16,41,47,.12); cursor: pointer; }
 .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.8,.2,1); }
 .card:hover img { transform: scale(1.045); }
-.card-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: end; padding: 30px; background: linear-gradient(0deg, rgba(2,28,34,.9), rgba(2,28,34,.08) 68%); }
+.card-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: end; padding: 30px; background: linear-gradient(180deg, rgba(2,28,34,.34) 0%, transparent 34%), linear-gradient(0deg, rgba(2,28,34,.94) 0%, rgba(2,28,34,.58) 32%, rgba(2,28,34,.05) 72%); }
 .card-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: auto; }
 .tag { padding: 7px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; background: rgba(0,0,0,.12); backdrop-filter: blur(5px); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .card h3 { margin: 0 0 11px; font-family: 'Playfair Display', Georgia, serif; font-size: 31px; line-height: 1.05; }
