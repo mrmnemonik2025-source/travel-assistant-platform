@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#092d35">
+  <meta name="description" content="Авторские экскурсии Asia Mix Travel во Вьетнаме">
+  <title>TravelFlow • Asia Mix Travel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="TravelFlow — на главную">
+      <span class="brand-mark">TF</span>
+      <span><strong>TravelFlow</strong><small>Asia Mix Travel</small></span>
+    </a>
+    <nav aria-label="Основная навигация">
+      <a href="#excursions">Экскурсии</a>
+      <a href="#about">О нас</a>
+      <a class="nav-cta" href="https://t.me/AsiaMixTravelDemoBot" target="_blank" rel="noreferrer">Telegram-бот</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <span class="eyebrow">НЯЧАНГ · ВЬЕТНАМ</span>
+        <h1>Путешествия,<br><em>которые чувствуешь</em></h1>
+        <p>Авторские маршруты, тёплый сервис и лучшие впечатления от команды, которая живёт во Вьетнаме.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#excursions">Выбрать экскурсию</a>
+          <a class="button button-ghost" href="https://t.me/AsiaMixTravelDemoBot" target="_blank" rel="noreferrer">Подобрать в Telegram ↗</a>
+        </div>
+        <div class="hero-facts">
+          <span><strong>6</strong> маршрутов</span>
+          <span><strong>4.9</strong> оценка гостей</span>
+          <span><strong>7 дней</strong> на связи</span>
+        </div>
+      </div>
+      <div class="scroll-note">Листайте, чтобы исследовать <span>↓</span></div>
+    </section>
+
+    <section class="section intro" id="about">
+      <div>
+        <span class="eyebrow dark">ASIA MIX TRAVEL</span>
+        <h2>Ваш Вьетнам.<br>Без суеты.</h2>
+      </div>
+      <p>Мы отобрали маршруты, в которые поехали бы сами. Поможем выбрать формат, забронируем места и останемся рядом до возвращения в отель.</p>
+    </section>
+
+    <section class="section excursions" id="excursions">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow dark">КОЛЛЕКЦИЯ ВПЕЧАТЛЕНИЙ</span>
+          <h2>Выберите свой день</h2>
+        </div>
+        <p id="catalog-status">Загружаем экскурсии…</p>
+      </div>
+      <div class="cards" id="cards" aria-live="polite"></div>
+    </section>
+
+    <section class="section assurance">
+      <article><span>01</span><h3>Проверенные маршруты</h3><p>Только программы, которые знает и контролирует наша команда.</p></article>
+      <article><span>02</span><h3>Честная стоимость</h3><p>Фиксируем цену заранее и объясняем, что уже включено.</p></article>
+      <article><span>03</span><h3>Поддержка рядом</h3><p>Русскоязычный менеджер помогает до, во время и после поездки.</p></article>
+    </section>
+
+    <section class="cta-panel">
+      <div><span class="eyebrow">НЕ УВЕРЕНЫ, ЧТО ВЫБРАТЬ?</span><h2>Расскажите, какой отдых вам нравится</h2></div>
+      <a class="button button-light" href="https://t.me/AsiaMixTravelDemoBot" target="_blank" rel="noreferrer">Получить рекомендацию</a>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand footer-brand" href="#top"><span class="brand-mark">TF</span><span><strong>TravelFlow</strong><small>Asia Mix Travel</small></span></a>
+    <p>Демонстрационная платформа бронирования экскурсий</p>
+    <p>© <span id="year"></span> Asia Mix Travel</p>
+  </footer>
+
+  <dialog id="details-dialog" class="modal">
+    <button class="modal-close" type="button" aria-label="Закрыть">×</button>
+    <div id="details-content"></div>
+  </dialog>
+
+  <dialog id="booking-dialog" class="modal booking-modal">
+    <button class="modal-close" type="button" aria-label="Закрыть">×</button>
+    <div id="booking-content">
+      <span class="eyebrow dark">БРОНИРОВАНИЕ</span>
+      <h2>Оставьте заявку</h2>
+      <p class="booking-excursion" id="booking-excursion"></p>
+      <form id="booking-form">
+        <input type="hidden" id="excursion-id" name="excursion_id">
+        <label>Ваше имя<input name="customer_name" autocomplete="name" minlength="2" required placeholder="Например, Александр"></label>
+        <label>Телефон или WhatsApp<input name="phone" autocomplete="tel" minlength="7" required placeholder="+7 999 123-45-67"></label>
+        <div class="form-row">
+          <label>Дата поездки<input type="date" name="excursion_date" required></label>
+          <label>Количество гостей<input type="number" name="people_count" value="2" min="1" max="50" required></label>
+        </div>
+        <button class="button button-primary submit-button" type="submit">Отправить заявку</button>
+        <small class="privacy">Нажимая кнопку, вы соглашаетесь на обработку данных для связи по заявке.</small>
+        <p class="form-message" id="form-message" role="status"></p>
+      </form>
+    </div>
+    <div class="success" id="booking-success" hidden>
+      <span class="success-mark">✓</span>
+      <span class="eyebrow dark">ЗАЯВКА ПРИНЯТА</span>
+      <h2>Спасибо!</h2>
+      <p id="success-text"></p>
+      <button class="button button-primary" type="button" data-close>Вернуться к экскурсиям</button>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
