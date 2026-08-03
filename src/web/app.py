@@ -70,7 +70,8 @@ def excursion_payload(excursion) -> dict:
 		"audience": list(excursion.audience),
 		"interests": list(excursion.interests),
 		"formats": list(excursion.formats),
-		"image_url": f"/api/excursions/{excursion.id}/image",
+		"image_url": f"/static/images/excursions/{excursion.id}.webp",
+		"source_image_url": f"/api/excursions/{excursion.id}/image",
 	}
 
 
