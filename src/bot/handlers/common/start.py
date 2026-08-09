@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
@@ -9,7 +9,9 @@ from src.bot.keyboards.reply import main_menu_keyboard
 
 
 router = Router(name="common_start")
-
+@router.message(Command("chatid"))
+async def chat_id_command(message: Message) -> None:
+    await message.answer(f"Chat ID: {message.chat.id}")
 
 @router.message(CommandStart())
 async def start_command(message: Message) -> None:
