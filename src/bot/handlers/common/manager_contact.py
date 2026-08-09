@@ -124,6 +124,26 @@ async def start_manager_contact_from_inline(callback: CallbackQuery, state: FSMC
     await callback.answer()
 
 
+@router.message(ManagerReplyToClientFilter())
+async def reply_to_client_from_manager(message: Message) -> None:
+    client_id = extract_client_id(message.reply_to_message)
+    if client_id is None:
+        await message.reply("Не удалось определить клиента в исходном сообщении.")
+        return
+
+    try:
+        await message.bot.send_message(
+            chat_id=client_id,
+            text=message.text,
+        )
+    except Exception:
+        logger.exception("Failed to send manager reply to client %s", client_id)
+        await message.reply("Не удалось отправить ответ клиенту.")
+        return
+
+    await message.reply("✅ Ответ отправлен клиенту.")
+
+
 @router.message(ManagerContactStates.waiting_for_manager_message, F.text == CANCEL_MANAGER_MESSAGE_TEXT)
 async def cancel_manager_contact(message: Message, state: FSMContext) -> None:
     await state.clear()
@@ -180,23 +200,3 @@ async def handle_manager_message(message: Message, state: FSMContext) -> None:
         "✅ Сообщение отправлено менеджеру. Мы скоро с вами свяжемся.",
         reply_markup=main_menu_keyboard,
     )
-
-
-@router.message(ManagerReplyToClientFilter())
-async def reply_to_client_from_manager(message: Message) -> None:
-    client_id = extract_client_id(message.reply_to_message)
-    if client_id is None:
-        await message.reply("Не удалось определить клиента в исходном сообщении.")
-        return
-
-    try:
-        await message.bot.send_message(
-            chat_id=client_id,
-            text=message.text,
-        )
-    except Exception:
-        logger.exception("Failed to send manager reply to client %s", client_id)
-        await message.reply("Не удалось отправить ответ клиенту.")
-        return
-
-    await message.reply("✅ Ответ отправлен клиенту.")
