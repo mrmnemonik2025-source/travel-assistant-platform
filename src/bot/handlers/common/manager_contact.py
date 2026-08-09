@@ -1,8 +1,10 @@
 import logging
+import re
 from html import escape
 
 from aiogram import F, Router
 from aiogram.enums import ParseMode
+from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.formatting import Bold, Code, Text
@@ -19,6 +21,7 @@ from src.bot.states.manager_contact import ManagerContactStates
 
 router = Router(name="common_manager_contact")
 logger = logging.getLogger(__name__)
+CLIENT_ID_PATTERN = re.compile(r"\bUser ID\b\s*(?::\s*)?(\d+)", re.IGNORECASE)
 
 
 def build_contact_intro_text() -> str:
@@ -60,6 +63,33 @@ def build_manager_forward_text(message: Message, text: str) -> str:
         "\n",
         escape(text),
     ).as_html()
+
+
+def extract_client_id_from_text(text: str) -> int | None:
+    match = CLIENT_ID_PATTERN.search(text)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def extract_client_id(message: Message | None) -> int | None:
+    if message is None:
+        return None
+
+    message_text = message.text or message.caption or ""
+    return extract_client_id_from_text(message_text)
+
+
+class ManagerReplyToClientFilter(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        settings = load_settings()
+        if settings.manager_chat_id is None or message.chat.id != settings.manager_chat_id:
+            return False
+
+        if not message.reply_to_message or not message.text:
+            return False
+
+        return extract_client_id(message.reply_to_message) is not None
 
 
 async def start_manager_contact(message: Message, state: FSMContext) -> None:
@@ -150,3 +180,23 @@ async def handle_manager_message(message: Message, state: FSMContext) -> None:
         "✅ Сообщение отправлено менеджеру. Мы скоро с вами свяжемся.",
         reply_markup=main_menu_keyboard,
     )
+
+
+@router.message(ManagerReplyToClientFilter())
+async def reply_to_client_from_manager(message: Message) -> None:
+    client_id = extract_client_id(message.reply_to_message)
+    if client_id is None:
+        await message.reply("Не удалось определить клиента в исходном сообщении.")
+        return
+
+    try:
+        await message.bot.send_message(
+            chat_id=client_id,
+            text=message.text,
+        )
+    except Exception:
+        logger.exception("Failed to send manager reply to client %s", client_id)
+        await message.reply("Не удалось отправить ответ клиенту.")
+        return
+
+    await message.reply("✅ Ответ отправлен клиенту.")
