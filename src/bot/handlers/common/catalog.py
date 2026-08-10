@@ -124,7 +124,7 @@ def build_excursion_content(excursion: ExcursionData) -> tuple[str, list[str]]:
 	blocks: list[str] = [
 		"\n".join(
 			[
-				f"🏝 <b>{title_value}</b>",
+				f"<b>{title_value}</b>",
 				"",
 				f"🕒 <b>Время:</b> {time_value}",
 				f"💰 <b>Стоимость:</b> {price_value}",

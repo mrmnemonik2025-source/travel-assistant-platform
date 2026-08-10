@@ -9,7 +9,7 @@ def build_catalog_keyboard(excursions: list[ExcursionData]) -> InlineKeyboardMar
 		inline_keyboard.append(
 			[
 				InlineKeyboardButton(
-					text=f"🏝 {excursion.short_title}",
+					text=excursion.short_title,
 					callback_data=f"excursion:{excursion.id}",
 				),
 			]

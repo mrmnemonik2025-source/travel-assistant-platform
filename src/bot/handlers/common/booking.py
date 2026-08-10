@@ -371,7 +371,7 @@ async def start_booking_from_menu(message: Message, state: FSMContext) -> None:
 	keyboard = InlineKeyboardMarkup(
 		inline_keyboard=[
 			[InlineKeyboardButton(
-				text=f"🏝 {excursion.short_title}",
+				text=excursion.short_title,
 				callback_data=f"booking_select:{excursion.id}",
 			)]
 			for excursion in excursions

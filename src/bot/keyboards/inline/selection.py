@@ -12,7 +12,7 @@ def build_selection_result_keyboard(excursions: list[ExcursionData]) -> InlineKe
 		rows.append(
 			[
 				InlineKeyboardButton(
-					text=f"🏝 {excursion.short_title}",
+					text=excursion.short_title,
 					callback_data=f"excursion:{excursion.id}",
 				),
 			]

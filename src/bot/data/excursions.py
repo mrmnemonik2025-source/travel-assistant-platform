@@ -24,8 +24,8 @@ class ExcursionData:
 
 NIGHT_CRUISE = ExcursionData(
 	id="emperor_cruise",
-	title="Ночной круиз по заливу Нячанга",
-	short_title="Ночной круиз",
+	title="🌙 Ночной круиз по заливу Нячанга",
+	short_title="🌙 Ночной круиз",
 	time="16:30–20:00",
 	price="2 450 000 ₫ с человека",
 	description=(
@@ -52,8 +52,8 @@ NIGHT_CRUISE = ExcursionData(
 
 ASIA_MIX_ISLANDS = ExcursionData(
 	id="asia_mix_islands",
-	title="Asia Mix Islands",
-	short_title="Asia Mix Islands",
+	title="🏝️ Asia Mix Islands",
+	short_title="🏝️ Asia Mix Islands",
 	time="Расписание уточняется при бронировании",
 	price="1 564 000 ₫ с человека",
 	description="Авторская экскурсия Asia Mix по трём островам Нячанга со снорклингом.",
@@ -70,8 +70,8 @@ ASIA_MIX_ISLANDS = ExcursionData(
 
 DALAT_VIP = ExcursionData(
 	id="dalat_vip",
-	title="Далат VIP",
-	short_title="Далат VIP",
+	title="🏔️ Далат VIP",
+	short_title="🏔️ Далат VIP",
 	time="Однодневная экскурсия",
 	price="1 722 000 ₫ с человека",
 	description="Комфортная экскурсия в Далат по природным и культурным достопримечательностям горного курорта.",
@@ -90,8 +90,8 @@ DALAT_VIP = ExcursionData(
 
 NORTHERN_ISLANDS = ExcursionData(
 	id="northern_islands",
-	title="Северные острова",
-	short_title="Северные острова",
+	title="🚤 Северные острова",
+	short_title="🚤 Северные острова",
 	time="Однодневная экскурсия",
 	price="954 000 ₫ с человека",
 	description="Морская прогулка по северным островам с посещением парков Орхидей и Обезьян.",
@@ -108,8 +108,8 @@ NORTHERN_ISLANDS = ExcursionData(
 
 VINWONDERS = ExcursionData(
 	id="vinwonders",
-	title="VinWonders",
-	short_title="VinWonders",
+	title="🎡 VinWonders",
+	short_title="🎡 VinWonders",
 	time="В течение дня",
 	price="Взрослый — 1 050 000 ₫; ребёнок 100–139 см и гость 60+ — 800 000 ₫",
 	description="Стандартный входной билет в парк развлечений VinWonders Nha Trang.",
@@ -124,8 +124,8 @@ VINWONDERS = ExcursionData(
 
 DIVING = ExcursionData(
 	id="diving",
-	title="Дайвинг и снорклинг",
-	short_title="Дайвинг и снорклинг",
+	title="🤿 Дайвинг и снорклинг",
+	short_title="🤿 Дайвинг и снорклинг",
 	time="Расписание уточняется при бронировании",
 	price="Дайвинг — 2 385 000 ₫; снорклинг — 1 193 000 ₫",
 	description="Морская программа для знакомства с подводным миром Нячанга: дайвинг или снорклинг на выбор.",
