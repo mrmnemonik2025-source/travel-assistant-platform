@@ -1,4 +1,4 @@
-from src.bot.keyboards.reply.booking import booking_phone_keyboard
+from src.bot.keyboards.reply.booking import booking_cancel_keyboard, booking_phone_keyboard
 from src.bot.keyboards.reply.admin import (
 	CANCEL_ADMIN_EXCURSION_EDIT_TEXT,
 	CANCEL_ADMIN_EXCURSION_PHOTO_UPLOAD_TEXT,
@@ -27,6 +27,7 @@ __all__ = [
 	"CANCEL_ADMIN_EXCURSION_EDIT_TEXT",
 	"admin_excursion_photo_cancel_keyboard",
 	"CANCEL_ADMIN_EXCURSION_PHOTO_UPLOAD_TEXT",
+	"booking_cancel_keyboard",
 	"booking_phone_keyboard",
 	"manager_contact_keyboard",
 	"CANCEL_MANAGER_MESSAGE_TEXT",

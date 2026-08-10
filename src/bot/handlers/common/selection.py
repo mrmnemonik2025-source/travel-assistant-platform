@@ -205,4 +205,4 @@ async def handle_format(message: Message, state: FSMContext) -> None:
 			reply_markup=selection_no_results_keyboard,
 		)
 
-	await message.answer("Главное меню возвращено.", reply_markup=main_menu_keyboard)
+	await message.answer("🏠 Главное меню", reply_markup=main_menu_keyboard)

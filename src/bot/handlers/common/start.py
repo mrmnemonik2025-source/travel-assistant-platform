@@ -20,8 +20,7 @@ async def start_command(message: Message) -> None:
 		Bold("Asia Mix Travel"),
 		"\n\n",
 		"Добро пожаловать во Вьетнам! 🇻🇳\n\n",
-		"Я помогу подобрать интересную экскурсию и передать заявку менеджеру.\n\n",
-		"Скоро здесь появится удобное меню.",
+		"Я помогу подобрать интересную экскурсию и передать заявку менеджеру.",
 	)
 	await message.answer(
 		text.as_html(),
@@ -44,6 +43,6 @@ async def open_main_menu(callback: CallbackQuery) -> None:
 				pass
 
 		await callback.message.answer(
-			"Главное меню возвращено.",
+			"🏠 Главное меню",
 			reply_markup=main_menu_keyboard,
 		)

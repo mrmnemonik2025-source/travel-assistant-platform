@@ -13,3 +13,13 @@ booking_phone_keyboard = ReplyKeyboardMarkup(
 	resize_keyboard=True,
 	one_time_keyboard=False,
 )
+
+booking_cancel_keyboard = ReplyKeyboardMarkup(
+	keyboard=[
+		[
+			KeyboardButton(text="❌ Отменить заявку"),
+		],
+	],
+	resize_keyboard=True,
+	one_time_keyboard=False,
+)

@@ -65,6 +65,7 @@ ASIA_MIX_ISLANDS = ExcursionData(
 	image_path="src/bot/data/images/excursions/asia_mix_islands.jpg",
 	booking_callback_data="booking:asia_mix_islands",
 	interests=("Острова и пляжи",),
+	formats=("Спокойный отдых",),
 )
 
 DALAT_VIP = ExcursionData(
@@ -102,6 +103,7 @@ NORTHERN_ISLANDS = ExcursionData(
 	image_path="src/bot/data/images/excursions/northern_islands.jpg",
 	booking_callback_data="booking:northern_islands",
 	interests=("Острова и пляжи",),
+	formats=("Спокойный отдых",),
 )
 
 VINWONDERS = ExcursionData(

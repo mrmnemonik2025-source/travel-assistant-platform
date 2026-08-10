@@ -5,8 +5,9 @@ from datetime import date
 from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 from aiogram.utils.formatting import Bold, Code, Text
 
 from src.bot.config.settings import load_settings
@@ -17,7 +18,7 @@ from src.bot.keyboards.inline import (
 	booking_result_keyboard,
 	build_booking_calendar_keyboard,
 )
-from src.bot.keyboards.reply import booking_phone_keyboard, main_menu_keyboard
+from src.bot.keyboards.reply import booking_cancel_keyboard, booking_phone_keyboard, main_menu_keyboard
 from src.bot.states.booking import BookingStates
 from src.bot.services.bookings import BookingSubmissionData, booking_service
 from src.bot.services.excursions import excursion_service
@@ -59,6 +60,17 @@ MONTH_NAME_TO_NUMBER = {
 
 DATE_WITH_DOTS_PATTERN = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{4})$")
 DATE_WITH_MONTH_PATTERN = re.compile(r"^(\d{1,2})\s+([А-Яа-яЁё]+)(?:\s+(\d{4}))?$")
+RUSSIAN_PHONE_RE = re.compile(r"^\+?7(\d{10})$")
+
+
+def format_phone_display(raw: str) -> str:
+	"""Format phone number for display. Formats recognised Russian (+7) numbers; returns others unchanged."""
+	cleaned = raw.strip()
+	match = RUSSIAN_PHONE_RE.match(cleaned)
+	if match:
+		d = match.group(1)
+		return f"+7 {d[:3]} {d[3:6]} {d[6:8]} {d[8:10]}"
+	return cleaned
 
 
 def build_start_booking_text() -> str:
@@ -112,7 +124,7 @@ def build_finish_booking_text(
 		"📱 ",
 		Bold("Контакт для связи"),
 		"\n",
-		phone,
+		format_phone_display(phone),
 		"\n\n",
 		manager_line,
 		"\n\n",
@@ -155,7 +167,7 @@ def build_manager_booking_text(
 		"📱 ",
 		Bold("Телефон"),
 		"\n",
-		phone,
+		format_phone_display(phone),
 		"\n\n",
 		"📅 ",
 		Bold("Дата"),
@@ -341,13 +353,47 @@ def get_state_calendar_month(stored_data: dict[str, object]) -> date:
 @router.message(F.text == "📝 Оставить заявку")
 async def start_booking_from_menu(message: Message, state: FSMContext) -> None:
 	await state.clear()
+	excursions = await excursion_service.list_effective_excursions()
+	if not excursions:
+		await message.answer("Каталог временно недоступен. Попробуйте позже или свяжитесь с менеджером.")
+		return
+	keyboard = InlineKeyboardMarkup(
+		inline_keyboard=[
+			[InlineKeyboardButton(
+				text=f"🏝 {excursion.short_title}",
+				callback_data=f"booking_select:{excursion.id}",
+			)]
+			for excursion in excursions
+		]
+	)
+	await state.set_state(BookingStates.waiting_for_excursion)
+	await message.answer(
+		Text("📝 ", Bold("Оформление заявки"), "\n\n", "Выберите экскурсию:").as_html(),
+		parse_mode=ParseMode.HTML,
+		reply_markup=keyboard,
+	)
+
+
+@router.callback_query(BookingStates.waiting_for_excursion, F.data.startswith("booking_select:"))
+async def handle_excursion_selection(callback: CallbackQuery, state: FSMContext) -> None:
+	excursion_id = (callback.data or "").split(":", 1)[1]
+	excursion = await excursion_service.get_effective_excursion(excursion_id)
+	if excursion is None or not excursion.is_active:
+		await callback.answer("Экскурсия временно недоступна", show_alert=True)
+		return
 	await state.update_data(
-		excursion_id="not_selected",
-		excursion="Не выбрана",
-		excursion_title="Не выбрана",
+		excursion_id=excursion.id,
+		excursion=excursion.title,
+		excursion_title=excursion.title,
 	)
 	await state.set_state(BookingStates.waiting_for_name)
-	await ask_for_name(message)
+	if callback.message:
+		try:
+			await callback.message.edit_reply_markup(reply_markup=None)
+		except TelegramBadRequest:
+			logger.debug("Failed to remove excursion selection keyboard", exc_info=True)
+		await ask_for_name(callback.message)
+	await callback.answer()
 
 
 @router.callback_query(F.data.startswith("booking:"))
@@ -444,6 +490,16 @@ async def handle_booking_calendar(callback: CallbackQuery, state: FSMContext) ->
 	await callback.answer("Календарь устарел.", show_alert=True)
 
 
+@router.message(StateFilter(BookingStates), F.text == "❌ Отменить заявку")
+async def cancel_booking_in_state(message: Message, state: FSMContext) -> None:
+	await cancel_booking_flow(message, state)
+
+
+@router.message(BookingStates.waiting_for_excursion)
+async def handle_excursion_state_text(message: Message) -> None:
+	await message.answer("Пожалуйста, выберите экскурсию из списка выше.")
+
+
 @router.message(BookingStates.waiting_for_name)
 async def handle_name(message: Message, state: FSMContext) -> None:
 	name = (message.text or "").strip()
@@ -465,6 +521,7 @@ async def handle_phone_contact(message: Message, state: FSMContext) -> None:
 	phone = (message.contact.phone_number or "").strip()
 	await state.update_data(phone=phone)
 	await state.set_state(BookingStates.waiting_for_date)
+	await message.answer("✅ Контакт получен.", reply_markup=booking_cancel_keyboard)
 	await send_booking_date_prompt(message, state)
 
 
@@ -477,6 +534,7 @@ async def handle_phone_text(message: Message, state: FSMContext) -> None:
 
 	await state.update_data(phone=phone)
 	await state.set_state(BookingStates.waiting_for_date)
+	await message.answer("✅ Телефон принят.", reply_markup=booking_cancel_keyboard)
 	await send_booking_date_prompt(message, state)
 
 
@@ -601,15 +659,6 @@ async def handle_people(message: Message, state: FSMContext) -> None:
 	)
 
 	await message.answer(
-		"Главное меню возвращено.",
+		"🏠 Главное меню",
 		reply_markup=main_menu_keyboard,
 	)
-
-
-@router.message(F.text == "❌ Отменить заявку")
-async def cancel_booking(message: Message, state: FSMContext) -> None:
-	current_state = await state.get_state()
-	if not current_state:
-		return
-
-	await cancel_booking_flow(message, state)
