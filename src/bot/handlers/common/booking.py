@@ -60,16 +60,27 @@ MONTH_NAME_TO_NUMBER = {
 
 DATE_WITH_DOTS_PATTERN = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{4})$")
 DATE_WITH_MONTH_PATTERN = re.compile(r"^(\d{1,2})\s+([А-Яа-яЁё]+)(?:\s+(\d{4}))?$")
-RUSSIAN_PHONE_RE = re.compile(r"^\+?7(\d{10})$")
+LEGACY_RUSSIAN_PHONE_RE = re.compile(r"^\+?7(\d{10})$")
+UX_RUSSIAN_PHONE_RE = re.compile(r"^(?:\+?7|8)?(9\d{9})$")
 
 
 def format_phone_display(raw: str) -> str:
-	"""Format phone number for display. Formats recognised Russian (+7) numbers; returns others unchanged."""
+	"""Format Russian mobile numbers for display; keep non-Russian numbers unchanged."""
 	cleaned = raw.strip()
-	match = RUSSIAN_PHONE_RE.match(cleaned)
+	match = LEGACY_RUSSIAN_PHONE_RE.match(cleaned)
 	if match:
 		d = match.group(1)
 		return f"+7 {d[:3]} {d[3:6]} {d[6:8]} {d[8:10]}"
+	return cleaned
+
+
+def format_phone_for_display(raw: str) -> str:
+	"""Compatibility alias for the newer presentation format used in the final UX."""
+	cleaned = raw.strip()
+	match = UX_RUSSIAN_PHONE_RE.match(cleaned)
+	if match:
+		d = match.group(1)
+		return f"+7 ({d[:3]}) {d[3:6]}-{d[6:8]}-{d[8:10]}"
 	return cleaned
 
 
@@ -124,7 +135,7 @@ def build_finish_booking_text(
 		"📱 ",
 		Bold("Контакт для связи"),
 		"\n",
-		format_phone_display(phone),
+		format_phone_for_display(phone),
 		"\n\n",
 		manager_line,
 		"\n\n",
@@ -167,7 +178,7 @@ def build_manager_booking_text(
 		"📱 ",
 		Bold("Телефон"),
 		"\n",
-		format_phone_display(phone),
+		format_phone_for_display(phone),
 		"\n\n",
 		"📅 ",
 		Bold("Дата"),
@@ -511,7 +522,8 @@ async def handle_name(message: Message, state: FSMContext) -> None:
 	await state.set_state(BookingStates.waiting_for_phone)
 	await message.answer(
 		"📱 Укажите номер телефона.\n\n"
-		"Вы можете отправить контакт кнопкой ниже или ввести номер вручную.",
+		"Вы можете отправить контакт кнопкой ниже или ввести номер вручную.\n"
+		"Формат: +7 (928) 234-25-03",
 		reply_markup=booking_phone_keyboard,
 	)
 

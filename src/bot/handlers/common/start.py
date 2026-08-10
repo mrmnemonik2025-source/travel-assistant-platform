@@ -1,14 +1,16 @@
 from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.utils.formatting import Bold, Text
+from pathlib import Path
 
 from src.bot.keyboards.reply import main_menu_keyboard
 
 
 router = Router(name="common_start")
+WELCOME_IMAGE_PATH = Path(__file__).resolve().parents[2] / "assets" / "images" / "welcome_vietnam.png"
 @router.message(Command("chatid"))
 async def chat_id_command(message: Message) -> None:
     await message.answer(f"Chat ID: {message.chat.id}")
@@ -22,8 +24,22 @@ async def start_command(message: Message) -> None:
 		"Добро пожаловать во Вьетнам! 🇻🇳\n\n",
 		"Я помогу подобрать интересную экскурсию и передать заявку менеджеру.",
 	)
+	caption = text.as_html()
+	if WELCOME_IMAGE_PATH.exists():
+		try:
+			await message.answer_photo(
+				photo=FSInputFile(str(WELCOME_IMAGE_PATH)),
+				caption=caption,
+				parse_mode=ParseMode.HTML,
+				reply_markup=main_menu_keyboard,
+			)
+			return
+		except Exception:
+			# If media sending fails, keep /start flow functional via text fallback.
+			pass
+
 	await message.answer(
-		text.as_html(),
+		caption,
 		parse_mode=ParseMode.HTML,
 		reply_markup=main_menu_keyboard,
 	)
