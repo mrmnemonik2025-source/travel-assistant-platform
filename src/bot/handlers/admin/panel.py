@@ -1426,7 +1426,7 @@ async def apply_excursion_photo_reset(callback: CallbackQuery, state: FSMContext
 
 	await clear_admin_excursion_edit_state(state)
 	await excursion_service.reset_excursion_image_path(excursion_id)
-	await show_excursion_photo_screen(callback, excursion_id, notice="✅ Исходная фотография восстановлена.")
+	await show_excursion_photo_screen(callback, excursion_id, notice="✅ Изменения сохранены")
 
 
 @router.callback_query(F.data.startswith("admin:exc:edit:"))
@@ -1575,7 +1575,7 @@ async def handle_excursion_photo_upload(message: Message, state: FSMContext) -> 
 		return
 
 	await state.clear()
-	await message.answer("✅ Фотография обновлена.", reply_markup=main_menu_keyboard)
+	await message.answer("✅ Изменения сохранены", reply_markup=main_menu_keyboard)
 
 	excursion = await excursion_service.get_effective_excursion(excursion_id)
 	if excursion is None:
@@ -1649,7 +1649,7 @@ async def handle_excursion_field_edit_value(message: Message, state: FSMContext)
 		await message.answer("Экскурсия не найдена. Возвращаю в админ-меню.", reply_markup=main_menu_keyboard)
 		return
 
-	await message.answer("✅ Изменения сохранены.", reply_markup=main_menu_keyboard)
+	await message.answer("✅ Изменения сохранены", reply_markup=main_menu_keyboard)
 	await message.answer(
 		build_admin_excursion_card_text(
 			excursion_title=excursion.title,
@@ -1695,7 +1695,7 @@ async def toggle_excursion_visibility(callback: CallbackQuery) -> None:
 		return
 
 	await excursion_service.set_excursion_active(excursion_id, not excursion.is_active)
-	await show_excursion_card(callback, excursion_id, notice="✅ Экскурсия снова доступна.")
+	await show_excursion_card(callback, excursion_id, notice="✅ Изменения сохранены")
 
 
 @router.callback_query(F.data.startswith("admin:exc:hide_apply:"))
@@ -1718,7 +1718,7 @@ async def apply_hide_excursion(callback: CallbackQuery) -> None:
 		return
 
 	await excursion_service.set_excursion_active(excursion_id, False)
-	await show_excursion_card(callback, excursion_id, notice="✅ Экскурсия скрыта.")
+	await show_excursion_card(callback, excursion_id, notice="✅ Изменения сохранены")
 
 
 @router.callback_query(F.data.startswith("admin:exc:back:"))
