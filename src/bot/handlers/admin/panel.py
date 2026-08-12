@@ -1,8 +1,10 @@
 import logging
 import os
+from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.enums import ParseMode
@@ -390,13 +392,26 @@ def compact_excursion_title(title: str, limit: int = 22) -> str:
 	return f"{trimmed[: limit - 1]}…"
 
 
+def format_booking_created_at(raw_value: str) -> str:
+	try:
+		created_at = datetime.fromisoformat(raw_value)
+	except ValueError:
+		return raw_value
+
+	if created_at.tzinfo is None:
+		created_at = created_at.replace(tzinfo=timezone.utc)
+
+	local_dt = created_at.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+	return local_dt.strftime("%d.%m.%Y в %H:%M")
+
+
 def build_booking_card_text(*, booking: BookingRow) -> str:
 	status_label = escape(get_status_label(booking.status))
 	excursion_title = escape(booking.excursion_title)
 	customer_name = escape(booking.customer_name)
 	phone = escape(booking.phone)
 	excursion_date = escape(booking.excursion_date)
-	created_at = escape(booking.created_at)
+	created_at = escape(format_booking_created_at(booking.created_at))
 	username_raw = booking.telegram_username
 	username = f"@{username_raw}" if username_raw else "не указан"
 

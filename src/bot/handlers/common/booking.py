@@ -86,9 +86,6 @@ def format_phone_for_display(raw: str) -> str:
 
 def build_start_booking_text() -> str:
 	return Text(
-		"📝 ",
-		Bold("Оформление заявки"),
-		"\n\n",
 		"Как вас зовут?",
 	).as_html()
 
@@ -199,7 +196,11 @@ def build_manager_booking_text(
 
 
 async def ask_for_name(message: Message) -> None:
-	await message.answer(build_start_booking_text(), parse_mode=ParseMode.HTML)
+	await message.answer(
+		build_start_booking_text(),
+		parse_mode=ParseMode.HTML,
+		reply_markup=booking_cancel_keyboard,
+	)
 
 
 def build_booking_date_prompt_text() -> str:

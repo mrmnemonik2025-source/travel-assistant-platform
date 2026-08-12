@@ -6,7 +6,7 @@ from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.utils.formatting import Bold, Code, Text
 
 from src.bot.config.settings import load_settings
@@ -22,6 +22,7 @@ from src.bot.states.manager_contact import ManagerContactStates
 router = Router(name="common_manager_contact")
 logger = logging.getLogger(__name__)
 CLIENT_ID_PATTERN = re.compile(r"\bUser ID\b\s*(?::\s*)?(\d+)", re.IGNORECASE)
+MANAGER_REPLY_CALLBACK_PREFIX = "manager:reply:"
 
 
 def build_contact_intro_text() -> str:
@@ -80,6 +81,19 @@ def extract_client_id(message: Message | None) -> int | None:
     return extract_client_id_from_text(message_text)
 
 
+def build_manager_contact_card_keyboard(*, client_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💬 Ответить клиенту",
+                    callback_data=f"{MANAGER_REPLY_CALLBACK_PREFIX}{client_id}",
+                ),
+            ],
+        ]
+    )
+
+
 class ManagerReplyToClientFilter(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         settings = load_settings()
@@ -121,6 +135,26 @@ async def start_manager_contact_from_menu(message: Message, state: FSMContext) -
 async def start_manager_contact_from_inline(callback: CallbackQuery, state: FSMContext) -> None:
     if callback.message:
         await start_manager_contact(callback.message, state)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith(MANAGER_REPLY_CALLBACK_PREFIX))
+async def prepare_manager_reply(callback: CallbackQuery) -> None:
+    settings = load_settings()
+    if settings.manager_chat_id is None or callback.message is None or callback.message.chat.id != settings.manager_chat_id:
+        await callback.answer()
+        return
+
+    client_id_raw = (callback.data or "")[len(MANAGER_REPLY_CALLBACK_PREFIX) :]
+    if not client_id_raw.isdigit():
+        await callback.answer("Не удалось определить клиента.", show_alert=True)
+        return
+
+    client_id = int(client_id_raw)
+    await callback.message.answer(
+        f"✍️ Введите ответ клиенту одним сообщением.\n\nUser ID: {client_id}",
+        reply_markup=ForceReply(selective=True),
+    )
     await callback.answer()
 
 
@@ -185,6 +219,7 @@ async def handle_manager_message(message: Message, state: FSMContext) -> None:
             chat_id=settings.manager_chat_id,
             text=build_manager_forward_text(message, text),
             parse_mode=ParseMode.HTML,
+            reply_markup=build_manager_contact_card_keyboard(client_id=message.from_user.id if message.from_user else message.chat.id),
         )
     except Exception:
         logger.exception("Failed to send manager contact message")
