@@ -120,13 +120,19 @@ def group_extra_blocks(extra_blocks: list[str]) -> list[str]:
 
 
 def format_price_with_usd(price_text: str) -> str:
+	matches = list(VND_AMOUNT_PATTERN.finditer(price_text))
+
 	def replace_amount(match: re.Match[str]) -> str:
 		vnd_text = " ".join(match.group(1).split())
 		vnd_amount = int(vnd_text.replace(" ", ""))
 		usd_amount = round(vnd_amount / VND_PER_USD)
 		return f"{vnd_text} ₫ ≈ ${usd_amount}"
 
-	return VND_AMOUNT_PATTERN.sub(replace_amount, price_text)
+	formatted = VND_AMOUNT_PATTERN.sub(replace_amount, price_text)
+	if len(matches) > 1:
+		formatted = re.sub(r"\s*;\s*", "\n", formatted)
+
+	return formatted
 
 
 def build_excursion_content(excursion: ExcursionData) -> tuple[str, list[str]]:
@@ -136,6 +142,9 @@ def build_excursion_content(excursion: ExcursionData) -> tuple[str, list[str]]:
 		if is_real_value(excursion.price)
 		else UNKNOWN_VALUE
 	)
+	price_line = f"💰 <b>Стоимость:</b> {price_value}"
+	if "\n" in price_value:
+		price_line = f"💰 <b>Стоимость:</b>\n{price_value}"
 	title_value = escape(excursion.title)
 
 	blocks: list[str] = [
@@ -144,7 +153,7 @@ def build_excursion_content(excursion: ExcursionData) -> tuple[str, list[str]]:
 				f"<b>{title_value}</b>",
 				"",
 				f"🕒 <b>Время:</b> {time_value}",
-				f"💰 <b>Стоимость:</b> {price_value}",
+				price_line,
 			]
 		),
 	]
