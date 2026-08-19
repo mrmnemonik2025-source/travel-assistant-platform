@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from datetime import date
 
@@ -11,6 +12,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from aiogram.utils.formatting import Bold, Code, Text
 
 from src.bot.config.settings import load_settings
+from src.bot.handlers.common.manager_contact import MANAGER_REPLY_CALLBACK_PREFIX
 from src.bot.keyboards.inline import (
 	BOOKING_CALENDAR_CANCEL_CALLBACK,
 	BOOKING_CALENDAR_IGNORE_CALLBACK,
@@ -26,6 +28,8 @@ from src.bot.services.excursions import excursion_service
 
 router = Router(name="common_booking")
 logger = logging.getLogger(__name__)
+DEMO_DISPLAY_PHONE = "+7 (999) 123-45-67"
+DEMO_PHONE_ENV_VAR = "TRAVELFLOW_DEMO_PHONE"
 
 BOOKING_DATE_PROMPT_CHAT_ID_KEY = "booking_date_prompt_chat_id"
 BOOKING_DATE_PROMPT_MESSAGE_ID_KEY = "booking_date_prompt_message_id"
@@ -84,6 +88,30 @@ def format_phone_for_display(raw: str) -> str:
 	return cleaned
 
 
+def build_manager_reply_keyboard(*, client_id: int) -> InlineKeyboardMarkup:
+	return InlineKeyboardMarkup(
+		inline_keyboard=[
+			[
+				InlineKeyboardButton(
+					text="💬 Ответить клиенту",
+					callback_data=f"{MANAGER_REPLY_CALLBACK_PREFIX}{client_id}",
+				),
+			],
+		]
+	)
+
+
+def is_demo_phone_enabled() -> bool:
+	value = os.getenv(DEMO_PHONE_ENV_VAR, "").strip().lower()
+	return value in {"1", "true", "yes", "on"}
+
+
+def get_display_phone(raw_phone: str) -> str:
+	if is_demo_phone_enabled():
+		return DEMO_DISPLAY_PHONE
+	return format_phone_for_display(raw_phone)
+
+
 def build_start_booking_text() -> str:
 	return Text(
 		"Как вас зовут?",
@@ -105,6 +133,7 @@ def build_finish_booking_text(
 		if not manager_delayed
 		else "Наш менеджер свяжется с вами позже, как только сможет."
 	)
+	phone_display = get_display_phone(phone)
 	return Text(
 		"✅ ",
 		Bold(status_line[2:]),
@@ -132,7 +161,7 @@ def build_finish_booking_text(
 		"📱 ",
 		Bold("Контакт для связи"),
 		"\n",
-		format_phone_for_display(phone),
+		phone_display,
 		"\n\n",
 		manager_line,
 		"\n\n",
@@ -154,6 +183,7 @@ def build_manager_booking_text(
 	user_id: int,
 ) -> str:
 	username_value = f"@{username}" if username else "не указан"
+	phone_display = get_display_phone(phone)
 	return Text(
 		"🆕 ",
 		Bold("Новая заявка"),
@@ -175,7 +205,7 @@ def build_manager_booking_text(
 		"📱 ",
 		Bold("Телефон"),
 		"\n",
-		format_phone_for_display(phone),
+		phone_display,
 		"\n\n",
 		"📅 ",
 		Bold("Дата"),
@@ -534,7 +564,7 @@ async def handle_phone_contact(message: Message, state: FSMContext) -> None:
 	phone = (message.contact.phone_number or "").strip()
 	await state.update_data(phone=phone)
 	await state.set_state(BookingStates.waiting_for_date)
-	await message.answer("✅ Контакт получен.", reply_markup=booking_cancel_keyboard)
+	await message.answer("✅ Контакт получен.", reply_markup=ReplyKeyboardRemove())
 	await send_booking_date_prompt(message, state)
 
 
@@ -547,7 +577,7 @@ async def handle_phone_text(message: Message, state: FSMContext) -> None:
 
 	await state.update_data(phone=phone)
 	await state.set_state(BookingStates.waiting_for_date)
-	await message.answer("✅ Телефон принят.", reply_markup=booking_cancel_keyboard)
+	await message.answer("✅ Телефон принят.", reply_markup=ReplyKeyboardRemove())
 	await send_booking_date_prompt(message, state)
 
 
@@ -651,6 +681,7 @@ async def handle_people(message: Message, state: FSMContext) -> None:
 					user_id=user_id,
 				),
 				parse_mode=ParseMode.HTML,
+				reply_markup=build_manager_reply_keyboard(client_id=user_id),
 			)
 			manager_sent = True
 		except Exception:

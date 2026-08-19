@@ -90,9 +90,12 @@ def build_booking_calendar_keyboard(month_date: date) -> InlineKeyboardMarkup:
 				continue
 
 			day_date = date(month_date.year, month_date.month, day)
+			day_label = str(day)
+			if day_date == today:
+				day_label = f"[{day}]"
 			week_buttons.append(
 				_navigation_button(
-					str(day),
+					day_label,
 					f"{BOOKING_CALENDAR_PREFIX}:day:{day_date:%Y-%m-%d}",
 				)
 			)
