@@ -1,4 +1,5 @@
 import logging
+import re
 from html import escape
 from pathlib import Path
 
@@ -20,6 +21,8 @@ PLACEHOLDER_IMAGE_PATH = excursion_service.placeholder_image_path
 CAPTION_LIMIT = 1024
 TEXT_MESSAGE_LIMIT = 4096
 UNKNOWN_VALUE = "Уточняется у менеджера"
+VND_PER_USD = 26000
+VND_AMOUNT_PATTERN = re.compile(r"(\d[\d\s]*)\s*₫")
 
 
 def build_catalog_text() -> str:
@@ -116,9 +119,23 @@ def group_extra_blocks(extra_blocks: list[str]) -> list[str]:
 	return messages
 
 
+def format_price_with_usd(price_text: str) -> str:
+	def replace_amount(match: re.Match[str]) -> str:
+		vnd_text = " ".join(match.group(1).split())
+		vnd_amount = int(vnd_text.replace(" ", ""))
+		usd_amount = round(vnd_amount / VND_PER_USD)
+		return f"{vnd_text} ₫ ≈ ${usd_amount}"
+
+	return VND_AMOUNT_PATTERN.sub(replace_amount, price_text)
+
+
 def build_excursion_content(excursion: ExcursionData) -> tuple[str, list[str]]:
 	time_value = escape(excursion.time.strip()) if is_real_value(excursion.time) else UNKNOWN_VALUE
-	price_value = escape(excursion.price.strip()) if is_real_value(excursion.price) else UNKNOWN_VALUE
+	price_value = (
+		escape(format_price_with_usd(excursion.price.strip()))
+		if is_real_value(excursion.price)
+		else UNKNOWN_VALUE
+	)
 	title_value = escape(excursion.title)
 
 	blocks: list[str] = [
