@@ -121,12 +121,6 @@ class ManagerReplyToClientFilter(BaseFilter):
         return extract_client_id(message.reply_to_message) is not None
 
 
-class ManagerChatMessageFilter(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        settings = load_settings()
-        return settings.manager_chat_id is not None and message.chat.id == settings.manager_chat_id
-
-
 async def start_manager_contact(message: Message, state: FSMContext) -> None:
     
     settings = load_settings()
@@ -176,13 +170,6 @@ async def prepare_reply_to_client_from_button(callback: CallbackQuery, state: FS
 
     await state.update_data(**{MANAGER_REPLY_CLIENT_ID_KEY: client_id})
     await state.set_state(ManagerContactStates.waiting_for_client_reply)
-    logger.info(
-        "Manager reply prepared: from_user_id=%s chat_id=%s state=%s client_id=%s",
-        callback.from_user.id if callback.from_user else None,
-        callback.message.chat.id if callback.message else None,
-        await state.get_state(),
-        client_id,
-    )
     await callback.message.answer(f"Введите ответ клиенту одним сообщением. User ID: {client_id}")
     await callback.answer()
 
@@ -201,12 +188,6 @@ async def reply_to_client_from_manager(message: Message, state: FSMContext) -> N
 
 @router.message(ManagerContactStates.waiting_for_client_reply, F.text)
 async def send_client_reply_from_manager(message: Message, state: FSMContext) -> None:
-    logger.info(
-        "Manager reply message received: from_user_id=%s chat_id=%s state=%s",
-        message.from_user.id if message.from_user else None,
-        message.chat.id,
-        await state.get_state(),
-    )
     settings = load_settings()
     if settings.manager_chat_id is None or message.chat.id != settings.manager_chat_id:
         await state.clear()
@@ -294,15 +275,4 @@ async def handle_manager_message(message: Message, state: FSMContext) -> None:
     await message.answer(
         "✅ Сообщение отправлено менеджеру. Мы скоро с вами свяжемся.",
         reply_markup=main_menu_keyboard,
-    )
-
-
-@router.message(ManagerChatMessageFilter())
-async def log_unhandled_manager_chat_message(message: Message, state: FSMContext) -> None:
-    logger.info(
-        "Manager chat fallback hit: from_user_id=%s chat_id=%s state=%s text=%r",
-        message.from_user.id if message.from_user else None,
-        message.chat.id,
-        await state.get_state(),
-        message.text,
     )
