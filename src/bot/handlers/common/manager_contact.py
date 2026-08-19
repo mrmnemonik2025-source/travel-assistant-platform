@@ -6,7 +6,7 @@ from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.utils.formatting import Bold, Code, Text
 
 from src.bot.config.settings import load_settings
@@ -23,6 +23,7 @@ router = Router(name="common_manager_contact")
 logger = logging.getLogger(__name__)
 CLIENT_ID_PATTERN = re.compile(r"\bUser ID\b\s*(?::\s*)?(\d+)", re.IGNORECASE)
 MANAGER_REPLY_CALLBACK_PREFIX = "manager:reply:"
+MANAGER_REPLY_CLIENT_ID_KEY = "manager_reply_client_id"
 
 
 def build_contact_intro_text() -> str:
@@ -94,6 +95,20 @@ def build_manager_contact_card_keyboard(*, client_id: int) -> InlineKeyboardMark
     )
 
 
+def extract_client_id_from_callback_data(callback_data: str | None) -> int | None:
+    if not callback_data:
+        return None
+
+    if not callback_data.startswith(MANAGER_REPLY_CALLBACK_PREFIX):
+        return None
+
+    client_id_raw = callback_data[len(MANAGER_REPLY_CALLBACK_PREFIX) :]
+    if not client_id_raw.isdigit():
+        return None
+
+    return int(client_id_raw)
+
+
 class ManagerReplyToClientFilter(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         settings = load_settings()
@@ -139,30 +154,54 @@ async def start_manager_contact_from_inline(callback: CallbackQuery, state: FSMC
 
 
 @router.callback_query(F.data.startswith(MANAGER_REPLY_CALLBACK_PREFIX))
-async def prepare_manager_reply(callback: CallbackQuery) -> None:
+async def prepare_reply_to_client_from_button(callback: CallbackQuery, state: FSMContext) -> None:
     settings = load_settings()
-    if settings.manager_chat_id is None or callback.message is None or callback.message.chat.id != settings.manager_chat_id:
-        await callback.answer()
+    if settings.manager_chat_id is None:
         return
 
-    client_id_raw = (callback.data or "")[len(MANAGER_REPLY_CALLBACK_PREFIX) :]
-    if not client_id_raw.isdigit():
+    if callback.message is None or callback.message.chat.id != settings.manager_chat_id:
+        return
+
+    client_id = extract_client_id_from_callback_data(callback.data)
+    if client_id is None:
         await callback.answer("Не удалось определить клиента.", show_alert=True)
+        logger.error("Failed to determine client_id for manager reply from callback data: %r", callback.data)
         return
 
-    client_id = int(client_id_raw)
-    await callback.message.answer(
-        f"✍️ Введите ответ клиенту одним сообщением.\n\nUser ID: {client_id}",
-        reply_markup=ForceReply(selective=True),
-    )
+    await state.update_data(**{MANAGER_REPLY_CLIENT_ID_KEY: client_id})
+    await state.set_state(ManagerContactStates.waiting_for_client_reply)
+    await callback.message.answer(f"Введите ответ клиенту одним сообщением. User ID: {client_id}")
     await callback.answer()
 
 
 @router.message(ManagerReplyToClientFilter())
-async def reply_to_client_from_manager(message: Message) -> None:
+async def reply_to_client_from_manager(message: Message, state: FSMContext) -> None:
     client_id = extract_client_id(message.reply_to_message)
     if client_id is None:
         await message.reply("Не удалось определить клиента в исходном сообщении.")
+        return
+
+    await state.update_data(**{MANAGER_REPLY_CLIENT_ID_KEY: client_id})
+    await state.set_state(ManagerContactStates.waiting_for_client_reply)
+    await message.reply(f"Введите ответ клиенту одним сообщением. User ID: {client_id}")
+
+
+@router.message(ManagerContactStates.waiting_for_client_reply, F.text)
+async def send_client_reply_from_manager(message: Message, state: FSMContext) -> None:
+    settings = load_settings()
+    if settings.manager_chat_id is None or message.chat.id != settings.manager_chat_id:
+        await state.clear()
+        return
+
+    data = await state.get_data()
+    client_id_raw = data.get(MANAGER_REPLY_CLIENT_ID_KEY)
+
+    try:
+        client_id = int(client_id_raw)
+    except (TypeError, ValueError):
+        logger.error("Manager reply state is missing valid client_id: %r", client_id_raw)
+        await message.reply("Не удалось определить получателя. Нажмите «Ответить клиенту» ещё раз.")
+        await state.clear()
         return
 
     try:
@@ -172,9 +211,11 @@ async def reply_to_client_from_manager(message: Message) -> None:
         )
     except Exception:
         logger.exception("Failed to send manager reply to client %s", client_id)
-        await message.reply("Не удалось отправить ответ клиенту.")
+        await message.reply("Не удалось отправить ответ клиенту. Попробуйте ещё раз.")
+        await state.clear()
         return
 
+    await state.clear()
     await message.reply("✅ Ответ отправлен клиенту.")
 
 
