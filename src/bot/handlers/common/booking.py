@@ -551,10 +551,19 @@ async def handle_name(message: Message, state: FSMContext) -> None:
 
 	await state.update_data(name=name)
 	await state.set_state(BookingStates.waiting_for_phone)
+	if is_demo_phone_enabled():
+		await message.answer(
+			"📱 Укажите номер телефона.\n\n"
+			"Введите номер вручную.\n"
+			"Формат: +7 (999) 123-45-67",
+			reply_markup=booking_cancel_keyboard,
+		)
+		return
+
 	await message.answer(
 		"📱 Укажите номер телефона.\n\n"
 		"Вы можете отправить контакт кнопкой ниже или ввести номер вручную.\n"
-		"Формат: +7 (928) 234-25-03",
+		"Формат: +7 (999) 123-45-67",
 		reply_markup=booking_phone_keyboard,
 	)
 
